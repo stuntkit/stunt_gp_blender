@@ -1,0 +1,210 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: pmd.bt
+//   Authors: Halamix2
+//   Version: 0.1
+//   Purpose: Read models from Stunt GP PMD 1.83 format
+//  Category: Games
+// File Mask: *.pmd
+//  ID Bytes: 50 4D 44 // PMD
+//   History: 
+//------------------------------------------------
+
+// based on Martin's initial template and my own research
+
+LittleEndian();
+
+local uint BLOCK_COUNT;
+local uint BLOCK_OFFSET;
+
+enum MODEL_TYPE {GENERIC, TRACK, CAR};
+enum <ushort> MODEL_TYPE_SHORT {S_GENERIC, S_TRACK, S_CAR}; //ugly workaround
+
+typedef struct {
+    char magic[24];
+    MODEL_TYPE type;
+    uint unknown;
+    
+} Header <read=Str("%s, %s", this.magic, EnumToString(this.type))>;
+
+typedef struct {
+    MODEL_TYPE_SHORT type;
+    ushort unknown;
+byte empty[0x18];
+    float one;
+    byte uk[2];
+    ushort uk2;
+    uint meshes_count;
+    ubyte addresses[0x20]; // place for runtime to put calculated addresses to
+    uint Meshes_id[4];
+    uint lods_number; // (0-3)
+    //ubyte huh[12];
+} Metadata;
+
+
+// Texture names thingy
+typedef struct {
+    local int pos = FTell();
+    char name[ReadStringLength(pos)-1];
+} Filename <read=Str("%s", this.name)>;
+
+typedef struct {
+    local int i <hidden=true>;
+    for(i = 0; i < sizes[6]/sizeof(uint); i++) {
+        if(six[i] > 0) {
+            FSeek(six[i] + BLOCK_OFFSET);
+            Filename five;
+        }
+    }
+} Five <read=Str("%d elements", sizes[6]/sizeof(uint) - 1)>;
+
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+} Vector3;
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+    float w;
+} Vector4;
+
+
+// file definition
+Header header;
+switch(header.magic) {
+    case "PMD V1.6":
+    case "PMD V1.61":
+    case "PMD V1.62":
+        BLOCK_COUNT=32;
+        BLOCK_OFFSET=0x120;
+        break;
+    case "PMD V1.7":
+    case "PMD V1.82":
+    case "PMD V1.83":
+        BLOCK_COUNT=37;
+        BLOCK_OFFSET=0x148;
+        break;
+}
+uint offsets[BLOCK_COUNT]<bgcolor=0x00ffff>;
+uint sizes[BLOCK_COUNT]<bgcolor=0x00ff00>;
+
+//blocks
+
+FSeek(offsets[0] + BLOCK_OFFSET);
+byte block_0[sizes[0]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[1] + BLOCK_OFFSET);
+byte block_1[sizes[1]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[2] + BLOCK_OFFSET);
+byte block_2[sizes[2]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[3] + BLOCK_OFFSET);
+byte block_3[sizes[3]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[4] + BLOCK_OFFSET);
+byte block_4[sizes[4]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[5] + BLOCK_OFFSET);
+byte block_5[sizes[5]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[6] + BLOCK_OFFSET);
+byte block_6[sizes[6]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[7] + BLOCK_OFFSET);
+byte block_7[sizes[7]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[8] + BLOCK_OFFSET);
+byte block_8[sizes[8]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[9] + BLOCK_OFFSET);
+byte block_9[sizes[9]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[10] + BLOCK_OFFSET);
+byte block_10[sizes[10]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[11] + BLOCK_OFFSET);
+byte block_11[sizes[11]] <bgcolor=0x0000ff>;
+
+//FSeek(offsets[12] + BLOCK_OFFSET);
+//byte block_12[sizes[12]] <bgcolor=0x0000ff>;
+
+//FSeek(offsets[13] + BLOCK_OFFSET);
+//byte block_13[sizes[13]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[14] + BLOCK_OFFSET);
+byte block_14[sizes[14]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[15] + BLOCK_OFFSET);
+byte block_15[sizes[15]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[16] + BLOCK_OFFSET);
+byte block_16[sizes[16]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[17] + BLOCK_OFFSET);
+byte block_17[sizes[17]] <bgcolor=0x0000ff>;
+
+//FSeek(offsets[18] + BLOCK_OFFSET);
+//byte block_18[sizes[18]] <bgcolor=0x0000ff>;
+
+//FSeek(offsets[19] + BLOCK_OFFSET);
+//byte block_19[sizes[19]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[20] + BLOCK_OFFSET);
+byte block_20[sizes[20]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[21] + BLOCK_OFFSET);
+byte block_21[sizes[21]] <bgcolor=0x0000ff>;// ai curve points
+
+FSeek(offsets[22] + BLOCK_OFFSET);
+byte block_22[sizes[22]] <bgcolor=0x0000ff>; // ai metadata
+
+FSeek(offsets[23] + BLOCK_OFFSET);
+byte block_23[sizes[23]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[24] + BLOCK_OFFSET);
+byte block_24[sizes[24]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[25] + BLOCK_OFFSET);
+byte block_25[sizes[25]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[26] + BLOCK_OFFSET);
+byte block_26[sizes[26]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[27] + BLOCK_OFFSET);
+byte block_27[sizes[27]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[28] + BLOCK_OFFSET);
+byte block_28[sizes[28]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[29] + BLOCK_OFFSET);
+byte block_29[sizes[29]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[30] + BLOCK_OFFSET);
+byte block_30[sizes[30]] <bgcolor=0x0000ff>;
+
+FSeek(offsets[31] + BLOCK_OFFSET);
+byte block_31[sizes[31]] <bgcolor=0x0000ff>;
+
+if (BLOCK_COUNT == 37) {
+    FSeek(offsets[32] + BLOCK_OFFSET);
+    byte block_32[sizes[32]] <bgcolor=0x0000ff>;
+    
+    FSeek(offsets[33] + BLOCK_OFFSET);
+    byte block_33[sizes[33]] <bgcolor=0x0000ff>;
+    
+    FSeek(offsets[34] + BLOCK_OFFSET);
+    byte block_34[sizes[34]] <bgcolor=0x0000ff>;
+    
+    FSeek(offsets[35] + BLOCK_OFFSET);
+    byte block_35[sizes[35]] <bgcolor=0x0000ff>;
+    
+    FSeek(offsets[36] + BLOCK_OFFSET);
+    byte block_36[sizes[36]] <bgcolor=0x0000ff>;
+
+}

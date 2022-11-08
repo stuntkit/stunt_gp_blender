@@ -1,0 +1,363 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: pmd.bt
+//   Authors: Halamix2
+//   Version: 0.1
+//   Purpose: Read models from Stunt GP PMD 1.83 format
+//  Category: Games
+// File Mask: *.pmd
+//  ID Bytes: 50 4D 44 // PMD
+//   History: 
+//------------------------------------------------
+
+// based on Martin's initial template and my own research
+
+LittleEndian();
+
+local uint BLOCK_COUNT;
+local uint BLOCK_OFFSET;
+
+enum <uint> MODEL_TYPE {GENERIC, TRACK, CAR};
+enum <ushort> MODEL_TYPE_SHORT {S_GENERIC, S_TRACK, S_CAR}; //ugly workaround since enums are global
+
+typedef struct {
+    char magic[24];
+    MODEL_TYPE type;
+    uint padding; // I hope this is just padding
+    
+} Header <read=Str("%s, %s", this.magic, EnumToString(this.type))>;
+
+typedef struct {
+    //string name;
+    char name[ReadStringLength(FTell())-1];
+} Name <read=Str("%s", this.name)>;
+
+typedef struct {
+    local int i <hidden=true>;
+    for(i = 0; i < sizes[6]/sizeof(uint); i++) {
+        if(texture_offsets[i] > 0) {
+            FSeek(texture_offsets[i] + BLOCK_OFFSET);
+            Name textures <name="textures">;
+        }
+    }
+} Five <read=Str("%d textures", sizes[6]/sizeof(uint) - 1)>;
+
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+} Vector3 <read=Str("%f, %f, %f", this.x, this.y, this.z)>;
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+    float w;
+} Vector4 <read=Str("%f, %f, %f %f", this.x, this.y, this.z, this.w)>;
+
+typedef struct {
+    ubyte vert_count;
+    ubyte material_id;
+    ubyte unk;
+    ubyte unk2;
+    ushort vert_index;
+    ushort face_index;
+} Polygon;
+
+typedef struct {
+    float u;
+    float v;
+    ushort vert_index;
+    ushort vert_index2 <comment="?">;
+    uint normal;
+    if (vert_index != vert_index2) {
+        Printf("Different vert_index at %X", FTell());
+    }
+} UV <size=16, read=Str("%f, %f, %d, %d, %d", this.u, this.v, this.vert_index, this.vert_index2, this.normal)>;
+
+// Transform
+typedef struct {
+    //guessing here
+    float matrix[12]<comment="3x4">;
+    float unk[2];
+} Transform_1_60;
+
+typedef struct {
+    float matrix[16] <comment="4x4">;
+    float unk[2];
+} Transform_1_82;
+
+typedef struct {
+    float matrix[16] <comment="4x4">;
+    float unk[4];
+} Transform_1_83;
+
+// Mesh
+typedef struct {
+    byte data[44];
+} Mesh_1_60;
+
+typedef struct {
+    byte data[60];
+} Mesh_1_82;
+
+
+// TODO SOMETHING IS FUCKED UP THERE BIG TIME
+typedef struct {
+    ushort unk[4];
+    ushort transform_index;
+    ushort zeros[3];
+    uint zeros2[3]; // TODO why this is split????
+    float weight;
+    ushort unk2[2];
+    ushort poly_count;
+    ushort uv_count;
+    uint vert_count;
+    uint uv_index;
+    uint vert_index;
+    uint poly_index;
+    uint zeros3[2];
+} Mesh_1_83;
+
+// META
+// TODO everything before meshes_count is fucked up
+typedef struct {
+    MODEL_TYPE_SHORT type;
+    ushort unknown;
+uint empty[3];
+    float one;
+    byte uk[2];
+    ushort uk2;
+    uint meshes_count;
+    ubyte addresses[0x20]; // place for runtime to put calculated addresses to
+    uint Meshes_id[4];
+    uint lods_number; // (0-3)
+    //ubyte huh[12];
+} Metadata_1_60;
+
+typedef struct {
+    MODEL_TYPE_SHORT type;
+    ushort unknown;
+ushort hmm;
+byte unu[6];
+float unk4;
+float hmm2[3];
+
+    float one;
+    byte uk[2];
+    ushort uk2;
+    uint meshes_count;
+    ubyte addresses[0x20]; // place for runtime to put calculated addresses to
+    uint Meshes_id[4];
+    uint lods_number; // (0-3)
+    uint unk;
+    uint block_6 <comment="loaded at runtime">;
+    uint last_thingy;
+    //ubyte huh[8];
+} Metadata_1_82;
+
+typedef struct {
+    int a;
+    float b;
+byte unk[3];
+byte unk;
+float huh[16];
+} Fourteen_1_60;
+
+// file definition
+Header header;
+switch(header.magic) {
+    case "PMD V1.6":
+    case "PMD V1.61":
+    case "PMD V1.62":
+        BLOCK_COUNT=32;
+        BLOCK_OFFSET=0x120;
+        break;
+    case "PMD V1.7":
+    case "PMD V1.82":
+    case "PMD V1.83":
+        BLOCK_COUNT=37;
+        BLOCK_OFFSET=0x148;
+        break;
+    default:
+        Printf( "Unknown PMD version: %s\n", header.magic);
+        return -1;
+}
+
+// Show real offsets in the file
+uint offsets[BLOCK_COUNT] <read=Str("0x%X", this >0 ? this + BLOCK_OFFSET : 0)>;
+uint sizes[BLOCK_COUNT];
+
+//blocks in their order
+
+FSeek(offsets[0] + BLOCK_OFFSET);
+switch(header.magic) {
+    case "PMD V1.6":
+    case "PMD V1.61":
+    case "PMD V1.62":
+    case "PMD V1.7":
+        Vector3 zero[sizes[0]/sizeof(Vector3)];
+        break;
+    case "PMD V1.82":
+    case "PMD V1.83":
+        Vector4 zero[sizes[0]/sizeof(Vector4)];
+        break;
+}
+
+FSeek(offsets[1] + BLOCK_OFFSET);
+Polygon one[sizes[1]/sizeof(Polygon)];
+
+FSeek(offsets[2] + BLOCK_OFFSET);
+UV two[sizes[2]/sizeof(UV)] <optimize=true>;
+
+FSeek(offsets[3] + BLOCK_OFFSET);
+Vector4 three[sizes[3]/sizeof(Vector4)];
+
+FSeek(offsets[4] + BLOCK_OFFSET);
+ushort four[sizes[4]/sizeof(ushort)];
+
+// offets to textures names
+FSeek(offsets[6] + BLOCK_OFFSET);
+uint texture_offsets[sizes[6]/sizeof(uint)] <hidden=true>;
+
+// TODO better presentation, maybe use local array of structs?
+FSeek(offsets[5] + BLOCK_OFFSET);
+Five texture;
+
+FSeek(offsets[7] + BLOCK_OFFSET);
+switch(header.magic) {
+    case "PMD V1.6":
+    case "PMD V1.61":
+    case "PMD V1.62":
+    case "PMD V1.7":
+        Vector3 seven[sizes[7]/sizeof(Vector3)];
+        break;
+    case "PMD V1.82":
+    case "PMD V1.83":
+        Vector4 seven[sizes[7]/sizeof(Vector4)];
+        break;
+}
+
+FSeek(offsets[8] + BLOCK_OFFSET);
+uint eight[sizes[8]/sizeof(uint)];
+
+FSeek(offsets[9] + BLOCK_OFFSET);
+switch(header.magic) {
+    case "PMD V1.6":
+    case "PMD V1.61":
+    case "PMD V1.62":
+    case "PMD V1.7":
+        Transform_1_60 nine[sizes[9]/sizeof(Transform_1_60)];
+        break;
+    case "PMD V1.82":
+        Transform_1_82 nine[sizes[9]/sizeof(Transform_1_82)];
+        break;
+    case "PMD V1.83":
+        Transform_1_83 nine[sizes[9]/sizeof(Transform_1_83)];
+        break;
+}
+
+FSeek(offsets[10] + BLOCK_OFFSET);
+switch(header.magic) {
+    case "PMD V1.6":
+    case "PMD V1.61":
+    case "PMD V1.62":
+    case "PMD V1.7":
+        Mesh_1_60 ten[sizes[10]/sizeof(Mesh_1_60)];
+        break;
+    case "PMD V1.82":
+        Mesh_1_82 ten[sizes[10]/sizeof(Mesh_1_82)];
+        break;
+    case "PMD V1.83":
+        Mesh_1_83 ten[sizes[10]/sizeof(Mesh_1_83)];
+        break;
+}
+
+FSeek(offsets[11] + BLOCK_OFFSET);
+switch(header.magic) {
+    case "PMD V1.6":
+    case "PMD V1.61":
+    case "PMD V1.62":
+    case "PMD V1.7":
+        Metadata_1_60 metadata;
+        break;
+    case "PMD V1.82":
+    case "PMD V1.83":
+        Metadata_1_82 metadata;
+        break;
+}
+
+// no offset for 12 & 13
+
+if(sizes[14]) {
+    FSeek(offsets[14] + BLOCK_OFFSET);
+    Fourteen_1_60 fourteen[sizes[14]/sizeof(Fourteen_1_60)];
+}
+
+// Here be dragons: track data
+
+typedef struct{
+    uint offsets[6];
+    uint used_unk;
+    uint offests_31;
+    uint unused;
+    uint used_9;
+    uint unused2[4];    
+} TrackMeta;
+
+if(header.type == TRACK) {
+    FSeek(offsets[15] + BLOCK_OFFSET);
+    byte fifteen[sizes[15]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[16] + BLOCK_OFFSET);
+    byte sixteen[sizes[16]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[17] + BLOCK_OFFSET);
+    byte seventeen[sizes[17]] <bgcolor=0x0055aa>;
+    
+    // no offset for 18 & 19
+    
+    FSeek(offsets[20] + BLOCK_OFFSET);
+    byte twenty[sizes[20]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[21] + BLOCK_OFFSET);
+    byte twentyone[sizes[21]] <bgcolor=0x0055aa>; // ai curve points
+    
+    FSeek(offsets[22] + BLOCK_OFFSET);
+    byte twentytwo[sizes[22]] <bgcolor=0x0055aa>; // ai curve metadata
+    
+    FSeek(offsets[23] + BLOCK_OFFSET);
+    byte twentythree[sizes[23]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[24] + BLOCK_OFFSET);
+    byte twentyfour[sizes[24]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[25] + BLOCK_OFFSET);
+    byte twentyfive[sizes[25]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[26] + BLOCK_OFFSET);
+    byte twentysix[sizes[26]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[27] + BLOCK_OFFSET);
+    byte twentyseven[sizes[27]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[28] + BLOCK_OFFSET);
+    byte twentyeight[sizes[28]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[29] + BLOCK_OFFSET);
+    byte twentynine[sizes[29]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[30] + BLOCK_OFFSET);
+    byte thirty[sizes[30]] <bgcolor=0x0055aa>;
+    
+    FSeek(offsets[31] + BLOCK_OFFSET);
+    byte thirtyone[sizes[31]] <bgcolor=0x0055aa>;
+    
+    if(BLOCK_COUNT>32) {
+        FSeek(offsets[32] + BLOCK_OFFSET);
+        TrackMeta thirtytwo <bgcolor=0x0055aa>; //56 bytes, always, metadata?
+        // blocks 33, 34, 35 & 36 are unused
+    }
+}
