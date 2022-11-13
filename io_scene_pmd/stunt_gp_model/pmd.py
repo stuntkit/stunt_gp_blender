@@ -12,9 +12,9 @@ from .offsetstable import OffsetsTableElement, OffsetsTable
 from .metadata import Metadata
 
 supported_versions = [
-    # "1.6",
-    # "1.61",
-    # "1.62",
+    "1.6",
+    "1.61",
+    "1.62",
     # "1.7",
     # "1.82",
     "1.83",
@@ -62,7 +62,7 @@ class PMD:
                 pmd_file
             )
 
-            # TODO rename from offsets to something more meaningul, as it also contains sizes
+            # TODO rename from offsets to something more meaningful, as it also contains sizes
             offsets_table = OffsetsTable.load_table(pmd_file, pmd.block_count)
 
             # load all blocks
@@ -79,7 +79,11 @@ class PMD:
             # block 2
             pmd.block_2 = UV.parse_uv(pmd_file, offsets_table, 2)
 
-            pmd.block_3 = Vector.parse_vector4(pmd_file, offsets_table, 3)
+            pmd.block_3 = []
+            if pmd.version in ["1.6", "1.61", "1.62"]:
+                pmd.block_3 = Vector.parse_vector3_todo(pmd_file, offsets_table, 3)
+            else:
+                pmd.block_3 = Vector.parse_vector4(pmd_file, offsets_table, 3)
 
             # block 4
             # TODO together with 8, load_indices()

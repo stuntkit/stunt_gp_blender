@@ -65,7 +65,7 @@ class Mesh:  # 1_83:
         table_index: int,
         mesh_index: int,
     ) -> "Mesh":
-        raise Exception("Unimplemented")
+        raise Exception("Unimplemented mesh")
         pass
 
     @staticmethod
@@ -75,7 +75,7 @@ class Mesh:  # 1_83:
         table_index: int,
         mesh_index: int,
     ) -> "Mesh":
-        raise Exception("Unimplemented")
+        raise Exception("Unimplemented mesh")
         pass
 
     @staticmethod

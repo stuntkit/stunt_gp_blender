@@ -1,6 +1,7 @@
 """This module manages Blender import for Stunt GP 3D files"""
 
 import bpy
+from os.path import exists
 from bpy_extras.io_utils import ImportHelper, orientation_helper
 from bpy.props import StringProperty, FloatProperty, BoolProperty
 from bpy.types import Operator
@@ -85,9 +86,7 @@ class ImportPMD(Operator, ImportHelper):
                 img_path = first + "/trackset00/" + second
             # TODO check if texture exists, if not replace levelX with tracksetX
             # TODO add trackset, skin option to importer (number?)
-            print("loading", img_path)
 
-            img = bpy.data.images.load(img_path)
             # tex = bpy.ops.texture.new()
             # blender_textures.append(tex)
 
@@ -102,7 +101,14 @@ class ImportPMD(Operator, ImportHelper):
             texture_node = node_tree.nodes.new("ShaderNodeTexImage")
             texture_node.select = True
             node_tree.nodes.active = texture_node
-            texture_node.image = img
+
+            img = None
+            if exists(img_path):
+                print("loading", img_path)
+                img = bpy.data.images.load(img_path)
+                texture_node.image = img
+            else:
+                print("couldn't load", img_path)
 
             node_tree.links.new(texture_node.outputs[0], bsdf.inputs[0])
             blender_materials.append(material)

@@ -1,4 +1,4 @@
-"""This module contains model metdata information"""
+"""This module contains model metadata information"""
 
 import struct
 from typing import BinaryIO
@@ -7,8 +7,8 @@ from .offsetstable import OffsetsTable
 from .filehelper import FileHelper
 
 
-class Metadata:  # 1_80:
-    """metadata in simplified format"""
+class Metadata:
+    """metadata in a simplified import only format"""
 
     def __init__(self, meshes_per_lod: int = 25, lods: list[int] = []) -> None:
         self.meshes_per_lod = meshes_per_lod
@@ -28,11 +28,24 @@ class Metadata:  # 1_80:
     ) -> "Metadata":
         current_cursor = pmd_file.tell()
         pmd_file.seek(offsets_table[table_index].offset)
-        # meshes_per_lod = struct.unpack("<BBBHHH", pmd_file.read(0xBC))
-        # metadata: Metadata = Metadata(meshes_per_lod)
+        pmd_file.seek(offsets_table[table_index].offset + 0x18)
+        meshes_per_lod = FileHelper.read_uint(pmd_file)
+        pmd_file.seek(offsets_table[table_index].offset + 0x3C)
+        (
+            index0,
+            index1,
+            index2,
+            index3,
+            lod_count,
+        ) = struct.unpack("<5L", pmd_file.read(0x14))
+
+        lods = [index0, index1, index2, index3]
+        lods = lods[: lod_count + 1]
+
+        metadata: Metadata = Metadata(meshes_per_lod, lods)
+
         pmd_file.seek(current_cursor)
-        raise Exception("Unimplemented")
-        # return metadata
+        return metadata
 
     @staticmethod
     def parse_metadata_1_80(

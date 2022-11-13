@@ -53,13 +53,20 @@ class Transform:  # 1_83:
         table_index: int,
         transform_index: int,
     ) -> "Transform":
-        raise Exception("Unimplemented")
-        # 3x4, but what values are stored?
-        # RRRT
-        # RRRT
-        # RRRT
-        # SSSx
-        pass
+        # RRR-
+        # RRR-
+        # RRR-
+        # SSS-
+        current_cursor = pmd_file.tell()
+        pmd_file.seek(offsets_table[table_index].offset + (0x38 * transform_index))
+        matrix_data: list[list[float]] = [[0.0, 0.0, 0.0, 0.0] for j in range(4)]
+        for j in range(4):
+            matrix_data[j] = [*struct.unpack("<3f", pmd_file.read(0xC)), 1.0]
+
+        unknowns = struct.unpack("<2L", pmd_file.read(0x8))
+        transform = Transform(matrix_data, *unknowns)
+        pmd_file.seek(current_cursor)
+        return transform
 
     @staticmethod
     def parse_transform_1_82(

@@ -45,6 +45,20 @@ class Vector:
         return vertices_list
 
     @staticmethod
+    def parse_vector3_todo(
+        pmd_file: BinaryIO, offsets_table: OffsetsTable, table_index: int
+    ) -> List["Vector"]:
+        current_cursor = pmd_file.tell()
+        pmd_file.seek(offsets_table[table_index].offset)
+        vertices_count = int(offsets_table[table_index].size / 0x10)
+        vertices_list = [Vector(0, 0, 0, 0) for i in range(vertices_count)]
+        for i in range(vertices_count):
+            x, y, z, unk = struct.unpack("<ffff", pmd_file.read(0x10))
+            vertices_list[i] = Vector(x, y, z, 1.0)
+        pmd_file.seek(current_cursor)
+        return vertices_list
+
+    @staticmethod
     def parse_vector4(
         pmd_file: BinaryIO, offsets_table: OffsetsTable, table_index: int
     ) -> List["Vector"]:

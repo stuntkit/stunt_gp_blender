@@ -4,6 +4,7 @@ import struct
 from typing import BinaryIO
 
 from .offsetstable import OffsetsTable
+from .filehelper import FileHelper
 
 
 class Mesh:  # 1_83:
@@ -12,28 +13,28 @@ class Mesh:  # 1_83:
     # pylint: disable=too-many-instance-attributes,too-many-arguments,too-many-locals
     def __init__(
         self,
-        uk: int,
-        uk2: int,
-        uk3: int,
-        uk4: int,
-        transform_index: int,
-        uk5: int,
-        uk6: int,
-        uk7: int,
-        uk8: int,
-        uk9: int,
-        uk10: int,
-        weight: float,
-        uk_index: int,
-        uk_index2: int,
-        polys_count: int,
-        uvs_count: int,
-        verts_count: int,
-        uvs_start_index: int,
-        verts_start_index: int,
-        polys_start_index: int,
-        uk11: int,
-        uk12: int,
+        uk: int = 0,
+        uk2: int = 0,
+        uk3: int = 0,
+        uk4: int = 0,
+        transform_index: int = 0,
+        uk5: int = 0,
+        uk6: int = 0,
+        uk7: int = 0,
+        uk8: int = 0,
+        uk9: int = 0,
+        uk10: int = 0,
+        weight: float = 0,
+        uk_index: int = 0,
+        uk_index2: int = 0,
+        polys_count: int = 0,
+        uvs_count: int = 0,
+        verts_count: int = 0,
+        uvs_start_index: int = 0,
+        verts_start_index: int = 0,
+        polys_start_index: int = 0,
+        uk11: int = 0,
+        uk12: int = 0,
     ):
         self.unknown: int = uk
         self.unknown2: int = uk2
@@ -65,8 +66,25 @@ class Mesh:  # 1_83:
         table_index: int,
         mesh_index: int,
     ) -> "Mesh":
-        raise Exception("Unimplemented")
-        pass
+        current_cursor = pmd_file.tell()
+
+        pmd_file.seek(offsets_table[table_index].offset + (0x2C * mesh_index) + 0x4)
+        ti = FileHelper.read_ushort(pmd_file)
+
+        pmd_file.seek(offsets_table[table_index].offset + (0x2C * mesh_index) + 0x18)
+        uvc, vc, pc, uvi, vi, pi = struct.unpack("<2H4L", pmd_file.read(0x14))
+
+        mesh = Mesh(
+            transform_index=ti,
+            uvs_count=uvc,
+            verts_count=vc,
+            polys_count=pc,
+            uvs_start_index=uvi,
+            verts_start_index=vi,
+            polys_start_index=pi,
+        )
+        pmd_file.seek(current_cursor)
+        return mesh
 
     @staticmethod
     def parse_mesh_1_82(
@@ -75,7 +93,9 @@ class Mesh:  # 1_83:
         table_index: int,
         mesh_index: int,
     ) -> "Mesh":
-        raise Exception("Unimplemented")
+        current_cursor = pmd_file.tell()
+        raise Exception("Unimplemented mesh")
+        pmd_file.seek(current_cursor)
         pass
 
     @staticmethod

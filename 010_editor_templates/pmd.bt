@@ -96,7 +96,17 @@ typedef struct {
 
 // Mesh
 typedef struct {
-    byte data[44];
+    //byte data[44];
+    short trash <bgcolor=0x66ff00>;
+    short trosh;
+    short transform_index;
+   short huh[9] <bgcolor=0x00ff00>;
+    short uvc;
+    short vc <bgcolor=0x0000ff>;
+    int pc;
+    int uvsi;
+    int vsi <bgcolor=0x0000ff>;
+    int psi;
 } Mesh_1_60;
 
 typedef struct {
@@ -134,7 +144,7 @@ uint empty[3];
     ubyte addresses[0x20]; // place for runtime to put calculated addresses to
     uint Meshes_id[4];
     uint lods_number; // (0-3)
-    //ubyte huh[12];
+    ubyte huh[8];
 } Metadata_1_60;
 
 typedef struct {
