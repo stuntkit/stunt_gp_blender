@@ -65,7 +65,8 @@ class ImportPMD(Operator, ImportHelper):
         print("done, result:", result)
         return result
 
-    def to_blender_basic(self, pmd: PMD, filename: str, name: str, scale=1.0):
+    @staticmethod
+    def to_blender_basic(pmd: PMD, filename: str, name: str, scale=1.0):
         # blender_textures = []
         blender_materials = []
         # load textures and create material for each
