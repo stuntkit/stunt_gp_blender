@@ -53,7 +53,7 @@ class ImportPMD(Operator, ImportHelper):
 
     # TODO add track/car texture selector?
 
-    # TODO support for muti-file import?
+    # TODO support for multi-file import?
     # skipcq: PYL-W0613
     def execute(self, context):
         pmd = PMD.from_file(self.filepath)
@@ -135,8 +135,8 @@ class ImportPMD(Operator, ImportHelper):
                 mesh_definition = pmd.block_10[i + (lod * pmd.block_11.meshes_per_lod)]
                 if (
                     (mesh_definition.uvs_count == 0)
-                    or (mesh_definition.uvs_count == 0)
-                    or (mesh_definition.uvs_count == 0)
+                    or (mesh_definition.polys_count == 0)
+                    or (mesh_definition.verts_count == 0)
                 ):
                     print("empty mesh:", i, "in LOD", lod)
                     continue
