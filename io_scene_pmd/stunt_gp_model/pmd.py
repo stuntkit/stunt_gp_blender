@@ -88,10 +88,10 @@ class PMD:
 
             # block 4
             # TODO together with 8, load_indices()
-            pmd.block_4 = pmd.__load_faces(pmd_file, offsets_table, 4)
+            pmd.block_4 = PMD.__load_faces(pmd_file, offsets_table, 4)
 
             # blocks 5 & 6
-            pmd.textures = pmd.__load_textures(
+            pmd.textures = PMD.__load_textures(
                 pmd_file, offsets_table, 6, pmd.block_count
             )
 
@@ -101,7 +101,7 @@ class PMD:
                 pmd.block_7 = Vector.parse_vector3(pmd_file, offsets_table, 7)
             else:
                 pmd.block_7 = Vector.parse_vector4(pmd_file, offsets_table, 7)
-            pmd.block_8 = pmd.__load_eight(pmd_file, offsets_table, 8, pmd.block_count)
+            pmd.block_8 = PMD.__load_eight(pmd_file, offsets_table, 8, pmd.block_count)
 
             # block 11
             if pmd.version in ["1.6", "1.61", "1.62", "1.7"]:
