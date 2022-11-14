@@ -10,7 +10,9 @@ from .filehelper import FileHelper
 class Metadata:
     """metadata in a simplified import only format"""
 
-    def __init__(self, meshes_per_lod: int = 25, lods: list[int] = []) -> None:
+    def __init__(self, meshes_per_lod: int = 25, lods: list[int] = None) -> None:
+        if lods is None:
+            lods = []
         self.meshes_per_lod = meshes_per_lod
 
         # TODO thee unknowns
