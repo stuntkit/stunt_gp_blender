@@ -172,6 +172,17 @@ class ImportPMD(Operator, ImportHelper):
                         + curr_poly.vertices_count
                     ]
 
+                    print(
+                        "try",
+                        len(faces_extracted),
+                        len(uvs),
+                        "poly",
+                        poly_index,
+                        "mesh",
+                        i,
+                        "lod",
+                        lod,
+                    )
                     tab = [uvs[k].vertex_id for k in faces_extracted]
                     faces.append(tab)
 

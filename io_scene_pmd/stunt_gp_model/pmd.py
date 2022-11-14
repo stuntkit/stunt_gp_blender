@@ -11,6 +11,8 @@ from .mesh import Mesh
 from .offsetstable import OffsetsTableElement, OffsetsTable
 from .metadata import Metadata
 
+# 1.6 support is broken
+# 1.8 support lacks textures
 supported_versions = [
     "1.6",
     "1.61",
@@ -39,14 +41,13 @@ class PMD:
         self.block_3: List[Vector] = []
         self.block_4: List[int] = []
         self.textures: List[str] = []
-        # TODO you're skipping block 6, pointers to texture names
-        # Should I do that with block 8 as well?
-        # Probably not as it's more like vertices and faces
+
         self.block_7: List[Vector] = []  # Not a vert?
         self.block_8: List[int] = []  # list of IDs to 7
+
         self.block_9: List[Transform] = []
         # TODO make self.lods that holds list of LODs, each holding list of meshes?
-        # Do I want to store 1:1 flat file representatin here or structurized one?
+        # Do I want to store 1:1 flat file representation here or structurized one?
         self.block_10: List[Mesh] = []
         # block 11 for now is this unholy mess
         self.block_11: Metadata = Metadata()
