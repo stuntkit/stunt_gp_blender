@@ -1,6 +1,7 @@
 version = 1
 
 exclude_patterns = [
+  "importPMD.py",
   "analyze*.py",
   "test*.py"
 ]
