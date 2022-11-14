@@ -12,10 +12,6 @@ from glob import glob
 from stunt_gp_model import PMD
 
 
-# binary
-import struct
-
-
 def analysis(f):
     pmd = PMD.from_file(f)
     print(f)
@@ -44,8 +40,8 @@ def main():
         print(f)
         try:
             analysis(f)
-        except:
-            pass
+        except Exception:
+            print(f"skipping {f}")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 """THis module contains most generic definition of a PMD file"""
 
-from typing import List, Tuple, TypeVar, BinaryIO
+from typing import List, Tuple, BinaryIO
 from .filehelper import FileHelper
 from .model_type import ModelType
 from .vector import Vector
@@ -8,7 +8,7 @@ from .uv import UV
 from .poly import Polygon
 from .transform import Transform
 from .mesh import Mesh
-from .offsetstable import OffsetsTableElement, OffsetsTable
+from .offsetstable import OffsetsTable
 from .metadata import Metadata
 
 # 1.6 support is broken

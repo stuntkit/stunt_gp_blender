@@ -1,7 +1,4 @@
 import bpy
-import struct
-import random
-import math
 
 box_collection = bpy.data.collections.new("boxes")
 bpy.context.scene.collection.children.link(box_collection)
@@ -12,7 +9,7 @@ class Tri:
         self.x = x * scale
         self.y = y * scale
         self.z = z * scale
-        if flipped == True:
+        if flipped:
             self.y = z * scale
             self.z = y * scale
 

@@ -2,11 +2,10 @@
 
 import bpy
 from os.path import exists
-from bpy_extras.io_utils import ImportHelper, orientation_helper
+from bpy_extras.io_utils import ImportHelper  # , orientation_helper
 from bpy.props import StringProperty, FloatProperty, BoolProperty
 from bpy.types import Operator
 
-from enum import Enum
 from pathlib import Path
 
 from .stunt_gp_model import PMD
@@ -23,10 +22,10 @@ class ImportPMD(Operator, ImportHelper):
     # ImportHelper mixin class uses this
     filename_ext = ".pmd"
 
-    filter_glob: StringProperty(  # type: ignore
+    filter_glob = StringProperty(
         default="*.pmd",
         options={"HIDDEN"},
-        maxlen=255,  # Max internal buffer length, longer would be clamped.
+        maxlen=255,
     )
 
     # TODO make it work on multiple files at once?
@@ -38,16 +37,16 @@ class ImportPMD(Operator, ImportHelper):
     # List of operator properties, the attributes will be assigned
     # to the class instance from the operator settings before calling.
     load_track_settings: BoolProperty(  # type: ignore
-        name="Load track .cfg file",
-        description="Load LevelBox data for track files",
+        name="Load track .cfg file",  # noqa: F722
+        description="Load LevelBox data for track files",  # noqa: F722
         default=True,
     )
 
     # vertices have values in range (-225000, 225000)
     # Blender will crash withour rescaling
     scale: FloatProperty(  # type: ignore
-        name="Model scale",
-        description="rescales the model, which is too big for Blender",
+        name="Model scale",  # noqa: F722
+        description="rescales the model, which is too big for Blender",  # noqa: F722
         default=2**-8,
     )
 
@@ -114,7 +113,6 @@ class ImportPMD(Operator, ImportHelper):
             node_tree.links.new(texture_node.outputs[0], bsdf.inputs[0])
             blender_materials.append(material)
 
-        collection = bpy.context.collection
         print("meshes in LOD: ", pmd.block_11.meshes_per_lod)
         model_collection = bpy.data.collections.new(name)
         bpy.context.scene.collection.children.link(model_collection)

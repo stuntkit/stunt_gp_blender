@@ -1,6 +1,6 @@
 """This module stores list of blocks defined in the PMD file header"""
 
-from typing import List, TypeVar, Iterable, Tuple, BinaryIO
+from typing import List, BinaryIO
 from .filehelper import FileHelper
 
 
