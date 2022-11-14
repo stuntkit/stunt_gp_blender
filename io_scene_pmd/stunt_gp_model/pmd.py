@@ -55,7 +55,7 @@ class PMD:
 
     @classmethod
     def from_file(cls, filename: str) -> "PMD":
-        with open(filename, "rb") as pmd_file:
+        with open(filename, "rb") as pmd_file:  # skipcq: PTC-W6004
             pmd: PMD = PMD()
 
             pmd.magic, pmd.version, pmd.model_type, pmd.block_count = pmd.parse_header(
