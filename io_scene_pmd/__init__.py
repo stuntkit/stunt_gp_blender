@@ -21,6 +21,7 @@ bl_info = {
 classes = (ImportPMD,)
 
 
+# skipcq: PYL-W0613
 def menu_func_import(self, context) -> None:
     # pylint: disable=unused-argument
     """register function registers the addon in import menu"""

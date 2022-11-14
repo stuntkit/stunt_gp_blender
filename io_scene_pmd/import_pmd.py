@@ -54,6 +54,7 @@ class ImportPMD(Operator, ImportHelper):
     # TODO add track/car texture selector?
 
     # TODO support for muti-file import?
+    # skipcq: PYL-W0613
     def execute(self, context):
         pmd = PMD.from_file(self.filepath)
         print("PMD has been loaded")
