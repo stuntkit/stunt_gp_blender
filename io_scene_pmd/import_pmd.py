@@ -55,18 +55,17 @@ class ImportPMD(Operator, ImportHelper):
 
     # TODO support for muti-file import?
     def execute(self, context):
-        self.pmd = PMD.from_file(self.filepath)
+        pmd = PMD.from_file(self.filepath)
         print("PMD has been loaded")
 
         print("convert it to something Blender understands")
         name = Path(self.filepath).stem
-        result = self.to_blender_basic(self.filepath, name, self.scale)
+        result = self.to_blender_basic(pmd, self.filepath, name, self.scale)
 
         print("done, result:", result)
         return result
 
-    def to_blender_basic(self, filename: str, name: str, scale=1.0):
-        pmd: PMD = self.pmd
+    def to_blender_basic(self, pmd: PMD, filename: str, name: str, scale=1.0):
         # blender_textures = []
         blender_materials = []
         # load textures and create material for each
