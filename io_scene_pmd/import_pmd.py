@@ -48,7 +48,7 @@ class ImportPMD(Operator, ImportHelper):
     scale: FloatProperty(  # type: ignore
         name="Model scale",
         description="rescales the model, which is too big for Blender",
-        default=2**-10,
+        default=2**-8,
     )
 
     # TODO add track/car texture selector?
@@ -122,12 +122,10 @@ class ImportPMD(Operator, ImportHelper):
         for lod in range(len(pmd.block_11.lods)):
             lod_collection = bpy.data.collections.new("lod_" + str(lod))
             model_collection.children.link(lod_collection)
-            # if lod != 0:
-            #     bpy.context.layer_collection.children["lod_" + str(lod)].exclude = True
-            # mod.hide_
-            #  render
-            #  select
-            #  viewport
+            if lod != 0:
+                # by default how only the best LOD
+                model_collection.children["lod_" + str(lod)].hide_render = True
+                model_collection.children["lod_" + str(lod)].hide_select = True
 
             for i in range(pmd.block_11.meshes_per_lod):
                 # meshbpy.data.collections.new("My Sub Collection")
