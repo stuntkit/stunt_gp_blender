@@ -1,0 +1,231 @@
+//This is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation; either version 3 of the License, or
+//any later version.
+//
+//Foobar is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//For a copy of the GNU General Public License see <http://www.gnu.org/licenses/>.
+
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: SGP_PMD.bt
+//   Authors: martin
+//   Version: 1.0
+//   Purpose: Any, Stunt GP from team17 PMD 1.82-1.83 mesh format.
+//------------------------------------------------
+
+struct face
+{
+    // triples or quartets do not always fit this block size, strips are referenced
+    //short indexes[2]; 
+    short index;
+};
+struct vertex
+{
+    float x, y, z;
+    float uk<comment="Weight?">;
+};
+struct uv
+{
+    float coord[2];
+    short vertexIndexPtr;
+    short uk;
+    int normalVector <comment="High values here 0x??????FF almost all the time, sometimes 0xFFFFFFFF">;
+};
+struct polygon
+{
+    byte vertCnt<comment="Verts per poly">;
+    byte materialIndex;
+    byte someEnum<comment="FF most of the time">;
+    byte someEnum<comment="twenty most of the time">;
+    short  vertices12Index<comment="It might be for game engine stuff.">;
+    short faceTableStartIndex;
+};
+struct matrix80
+{
+    float matrix[16];
+    int uk[4];
+};
+struct matrix72
+{
+    float matrix[16];
+    int uk[2];
+};
+struct matrix64
+{
+    float matrix[16];
+};
+struct matrix48
+{
+    float matrix[12];
+};
+struct surface64
+{
+    short uk[4]<comment="Where is object hierarchy?">;
+    short transformMatrixInxd;
+    short uk2[3];
+    int uk3[3] <comment="">;
+    float weight;
+    short ukIndex;
+    short ukIndex;
+    short polysCnt;
+    short uvsCnt;
+    int verticesCnt;
+    int uvsStartIndex;
+    int verticesStartIndex;
+    int polysStartIndex;
+    
+    int uk4[2];
+};
+struct surface60 
+{
+    short uk<comment="This struct is for older file versions (not used in game).">;
+    short uk;
+    int i1;
+    int transformMatrixInxd;
+    short uk1[2];
+    int uk2[4];
+    float someVal;
+    short uk;
+    short uk;
+    short polysCnt;
+    short uvsCnt;
+    short verticesCnt;
+    short uk;
+    int uvsStartIndex;
+    int verticesStartIndex;
+    int polysStartIndex;
+};
+void setPadding()
+{
+    typedef struct {
+        byte padding;
+     } PADDING <size=calcPadding, bgcolor=0x0000f0, name="PADDING", hidden=true>;
+    PADDING padding; 
+}
+int calcPadding(PADDING &p)
+{
+    local int paddingLen;
+    paddingLen = 32 - FTell() % 32;
+
+    if (paddingLen < 32)
+        return paddingLen;
+    return 0;
+}
+
+char header[32];
+// 3 x 12
+int offsets1Table[36]<comment="No idea how to use that.">;
+// 2 x 16
+int sizes[34]<comment="Sizes of data chunks.">; // 1,2,3,4,5,6,9,8,10,11,7
+int reserved[10];
+float uk[16];
+int reserved3[16];
+
+struct MeshData
+{
+    face facesDef[sizes[5]/sizeof(face)]<comment="It points to uvs array. Looks like indexes start over again for others subsets of vertices.">;
+    byte facesDefRest[(sizes[5]%sizeof(face))]<comment="Rest of data that does not fit structure.">;
+    setPadding();
+    
+    vertex vertices11[sizes[4]/sizeof(vertex)]<comment="A good stuff.">;
+    setPadding();
+    
+    vertex vertices12[sizes[1]/sizeof(vertex)]<comment="Colliders? It looks always like points on spherical surface. ?">;
+    setPadding();
+    
+    uv uvs[sizes[3]/sizeof(uv)];
+    setPadding();
+    
+    polygon polygons[sizes[2]/sizeof(polygon)]<comment="Some references to other arrays present.">;
+    setPadding();
+    
+    // PMD 1.83 or 1.82 
+    if(header[8] == '2') 
+        matrix72 transform[sizes[10]/sizeof(matrix72)];
+    else
+        matrix80 transform[sizes[10]/sizeof(matrix80)];
+    setPadding();
+    
+    if(header[8] == '2')
+        surface60 surfaces[sizes[11]/sizeof(surface60)]<comment="Car parts, different levels of detail etc.">;
+    else
+        surface64 surfaces[sizes[11]/sizeof(surface64)]<comment="Car parts, different levels of detail etc.">;
+    setPadding();
+    
+    vertex someCoords[sizes[8]/sizeof(vertex)];
+    setPadding();
+    
+    int someArray[sizes[9]/4];
+    setPadding();
+    
+    char textureFNames[sizes[6]];
+    setPadding();
+    
+    int offsets[sizes[7]/4]; // not sure what to do with those too
+    setPadding();
+};
+
+MeshData mesh <comment="This part occures always for all kinds of files.">;
+
+// **********************************************************************
+// another mesh? This part occurs for bigger track files
+// there might be some information for collision processor code
+struct trackData
+{
+    vertex vertices21[sizes[24]/sizeof(vertex)]<comment="Part of track infrastructure or colliders.">;
+    setPadding();
+
+
+    short facesDef2[sizes[26]/sizeof(short)]<comment="0xFF's are some magic key values?">;
+    setPadding();
+    
+    short facesDef3[sizes[25]/sizeof(short)];
+    setPadding();
+    
+    short facesDef4[sizes[27]/sizeof(short)];
+    setPadding();
+    
+    short facesDef5[sizes[28]/sizeof(short)];
+    setPadding();
+    
+    float someValues[sizes[30]/sizeof(float)]<comment="?">;
+    setPadding();
+    
+    short facesDef6[sizes[31]/sizeof(short)];
+    setPadding();
+    
+    short facesDef7[sizes[29]/sizeof(short)];
+    setPadding();
+    
+    matrix48 someFloats[sizes[32]/sizeof(matrix48)];
+    setPadding();
+    
+    float someEmptySpace[sizes[16]/sizeof(float)]<comment="Mostly zeros.">;
+    setPadding();
+    
+    if (sizes[19] != 0)
+        int unknown[16]; // not sure about it there
+    
+    matrix64 someTransforms[sizes[17]/sizeof(matrix64)];
+    setPadding();
+    
+    float someVals[sizes[18]/sizeof(float)];
+    setPadding();
+    
+    float someVals2[sizes[21]/sizeof(float)];
+    setPadding();
+    
+    vertex vertices22[sizes[22]/sizeof(vertex)]<comment="This looks like some curve for AI drivers.">;
+    setPadding();
+    
+    int offsets2[sizes[23]/4]; 
+    setPadding();
+};
+
+trackData data <comment="This one only for track files, there is no any mesh probably, but animations and engine data.">;
