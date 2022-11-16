@@ -68,50 +68,8 @@ class ImportPMD(Operator, ImportHelper):
     @staticmethod
     def to_blender_basic(pmd: PMD, filename: str, name: str, scale=1.0):
         # blender_textures = []
-        blender_materials = []
         # load textures and create material for each
-        for m in pmd.textures:
-            # TODO check if .tga exists, then .png, then .pc (optional if you have time and importer)
-            img_ext = "png"
-            img_path = (
-                str(Path(filename).parents[0])
-                + "/graphics24/"
-                + m.replace("\\\\", "/").replace("\\", "/").lower()
-                + "."
-                + img_ext
-            )
-            if "/trk_" in img_path:
-                first = img_path[: img_path.find("/trk_") - 6]  # levelX
-                second = img_path[img_path.find("/trk_") + 1 :]
-                img_path = first + "/trackset00/" + second
-            # TODO check if texture exists, if not replace levelX with tracksetX
-            # TODO add trackset, skin option to importer (number?)
-
-            # tex = bpy.ops.texture.new()
-            # blender_textures.append(tex)
-
-            # create material
-            # TODO easier name
-            material = bpy.data.materials.new(name=img_path)
-            material.use_nodes = True
-            # TODO does this make sense???
-            node_tree = material.node_tree
-            bsdf = node_tree.nodes.get("Principled BSDF")
-
-            texture_node = node_tree.nodes.new("ShaderNodeTexImage")
-            texture_node.select = True
-            node_tree.nodes.active = texture_node
-
-            img = None
-            if exists(img_path):
-                print("loading", img_path)
-                img = bpy.data.images.load(img_path)
-                texture_node.image = img
-            else:
-                print("couldn't load", img_path)
-
-            node_tree.links.new(texture_node.outputs[0], bsdf.inputs[0])
-            blender_materials.append(material)
+        blender_materials = ImportPMD.create_materials(filename, pmd.textures)
 
         print("meshes in LOD: ", pmd.block_11.meshes_per_lod)
         model_collection = bpy.data.collections.new(name)
@@ -242,3 +200,50 @@ class ImportPMD(Operator, ImportHelper):
         # meta_collection.objects.link(mesh7_obj)
 
         return {"FINISHED"}
+
+    @staticmethod
+    def create_materials(file_path: str, texture_names: list[str]) -> list[str]:
+        materials: list["bpy.types.Material"] = []
+        for m in texture_names:
+            # TODO check if .tga exists, then .png, then .pc (optional if you have time and importer)
+            img_ext = "png"
+            img_path = (
+                str(Path(file_path).parents[0])
+                + "/graphics24/"
+                + m.replace("\\\\", "/").replace("\\", "/").lower()
+                + "."
+                + img_ext
+            )
+            if "/trk_" in img_path:
+                first = img_path[: img_path.find("/trk_") - 6]  # levelX
+                second = img_path[img_path.find("/trk_") + 1 :]
+                img_path = first + "/trackset00/" + second
+            # TODO check if texture exists, if not replace levelX with tracksetX
+            # TODO add trackset, skin option to importer (number?)
+
+            # tex = bpy.ops.texture.new()
+            # blender_textures.append(tex)
+
+            # create material
+            # TODO easier name
+            material = bpy.data.materials.new(name=img_path)
+            material.use_nodes = True
+            # TODO does this make sense???
+            node_tree = material.node_tree
+            bsdf = node_tree.nodes.get("Principled BSDF")
+
+            texture_node = node_tree.nodes.new("ShaderNodeTexImage")
+            texture_node.select = True
+            node_tree.nodes.active = texture_node
+
+            img = None
+            if exists(img_path):
+                print("loading", img_path)
+                img = bpy.data.images.load(img_path)
+                texture_node.image = img
+            else:
+                print("couldn't load", img_path)
+
+            node_tree.links.new(texture_node.outputs[0], bsdf.inputs[0])
+            materials.append(material)
+        return materials
