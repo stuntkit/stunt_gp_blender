@@ -2,14 +2,17 @@
 
 # pylint: disable=import-error
 import bpy  # type: ignore
+
 from .import_pmd import ImportPMD
 
-# TODO expand to textures
+# TODO expand to textures import?
+# pylint: disable=unused-variable
 bl_info = {
     "name": "Stunt GP model format",
-    "author": "Piotr Halama",
+    "author": 'Piotr "Halamix2" Halama',
     "version": (0, 0, 2),
-    "blender": (2, 80, 0),  # TODO set to sane value
+    # might work with 2.80, I haven't checked
+    "blender": (3, 0, 0),
     "location": "File > Import",  # 'Import-Export',
     "description": "Import as Stunt GP 3D files",
     "warning": "Early prototype, can only import",
@@ -35,6 +38,7 @@ def register() -> None:
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 
 
+# pylint: disable=unused-variable
 def unregister() -> None:
     """register function unregisters classes and menus for use in Blender"""
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)

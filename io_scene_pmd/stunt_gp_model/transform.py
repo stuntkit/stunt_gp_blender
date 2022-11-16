@@ -45,7 +45,6 @@ class Transform:  # 1_83:
         self.unknown2: int = uk2
         self.unknown3: int = uk3
 
-    # TODO
     @staticmethod
     def parse_transform_1_60(
         pmd_file: BinaryIO,

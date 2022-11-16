@@ -59,6 +59,11 @@ class Mesh:  # 1_83:
         self.unknown11: int = uk11
         self.unknown12: int = uk12
 
+    def is_empty(self) -> bool:
+        if (self.uvs_count == 0) or (self.polys_count == 0) or (self.verts_count == 0):
+            return True
+        return False
+
     @staticmethod
     def parse_mesh_1_60(
         pmd_file: BinaryIO,

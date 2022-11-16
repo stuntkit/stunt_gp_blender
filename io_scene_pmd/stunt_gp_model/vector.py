@@ -18,7 +18,7 @@ class Vector:
 
     def get_coords_blender(self, scale: float = 1.0) -> Tuple[float, float, float]:
         """return the data in a format expected by Blender"""
-        # TODO don't swicth z & y here, flip everything on a higher lever
+        # TODO don't switch z & y here, flip everything on a higher lever
         # also scale
         return (
             (self.x / self.w) * scale,
@@ -34,6 +34,7 @@ class Vector:
     def parse_vector3(
         pmd_file: BinaryIO, offsets_table: OffsetsTable, table_index: int
     ) -> List["Vector"]:
+        """parses block of vectors with 3 coordinates"""
         current_cursor = pmd_file.tell()
         pmd_file.seek(offsets_table[table_index].offset)
         vertices_count = int(offsets_table[table_index].size / 0xC)
@@ -48,12 +49,13 @@ class Vector:
     def parse_vector3_todo(
         pmd_file: BinaryIO, offsets_table: OffsetsTable, table_index: int
     ) -> List["Vector"]:
+        """parses block of vectors with 3 coordinates plus one unknown field"""
         current_cursor = pmd_file.tell()
         pmd_file.seek(offsets_table[table_index].offset)
         vertices_count = int(offsets_table[table_index].size / 0x10)
         vertices_list = [Vector(0, 0, 0, 0) for i in range(vertices_count)]
         for i in range(vertices_count):
-            x, y, z, unk = struct.unpack("<ffff", pmd_file.read(0x10))
+            x, y, z, _ = struct.unpack("<ffff", pmd_file.read(0x10))
             vertices_list[i] = Vector(x, y, z, 1.0)
         pmd_file.seek(current_cursor)
         return vertices_list
@@ -62,6 +64,7 @@ class Vector:
     def parse_vector4(
         pmd_file: BinaryIO, offsets_table: OffsetsTable, table_index: int
     ) -> List["Vector"]:
+        """parses block of vectors with 4 coordinates"""
         current_cursor = pmd_file.tell()
         pmd_file.seek(offsets_table[table_index].offset)
         vertices_count = int(offsets_table[table_index].size / 0x10)

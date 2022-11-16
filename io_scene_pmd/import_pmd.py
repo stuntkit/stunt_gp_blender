@@ -1,3 +1,4 @@
+# type: ignore
 """This module manages Blender import for Stunt GP 3D files"""
 
 import bpy
@@ -8,7 +9,7 @@ from bpy.types import Operator
 
 from pathlib import Path
 
-from .stunt_gp_model import PMD
+from .stunt_gp_model import PMD, Transform
 
 
 # @orientation_helper(axis_forward="Z", axis_up="Y")
@@ -22,9 +23,9 @@ class ImportPMD(Operator, ImportHelper):
     # ImportHelper mixin class uses this
     filename_ext = ".pmd"
 
-    filter_glob = StringProperty(
-        default="*.pmd",
-        options={"HIDDEN"},
+    filter_glob: StringProperty(  # type: ignore
+        default="*.pmd",  # noqa: F722
+        options={"HIDDEN"},  # noqa: F722, F821
         maxlen=255,
     )
 
@@ -42,17 +43,21 @@ class ImportPMD(Operator, ImportHelper):
         default=True,
     )
 
-    # vertices have values in range (-225000, 225000)
-    # Blender will crash withour rescaling
+    # vertices have values in range (-225'000, 225'000)
+    # Blender limit is +-10'000, so in total 20'00 blender units
+    # Blender will crash without rescaling
     scale: FloatProperty(  # type: ignore
         name="Model scale",  # noqa: F722
         description="rescales the model, which is too big for Blender",  # noqa: F722
-        default=2**-8,
+        # -4 *should* work, -6 for tracks starts clipping on default settings
+        default=2**-6,
     )
 
     # TODO add track/car texture selector?
+    def __init__(self):
+        # dumb init to trick linters while keeping Blender compatibility
+        self.filepath: str
 
-    # TODO support for multi-file import?
     # skipcq: PYL-W0613
     def execute(self, context):
         pmd = PMD.from_file(self.filepath)
@@ -67,7 +72,6 @@ class ImportPMD(Operator, ImportHelper):
 
     @staticmethod
     def to_blender_basic(pmd: PMD, filename: str, name: str, scale=1.0):
-        # blender_textures = []
         # load textures and create material for each
         blender_materials = ImportPMD.create_materials(filename, pmd.textures)
 
@@ -77,27 +81,21 @@ class ImportPMD(Operator, ImportHelper):
 
         for lod in range(len(pmd.block_11.lods)):
             lod_collection = bpy.data.collections.new("lod_" + str(lod))
-            model_collection.children.link(lod_collection)
             if lod != 0:
                 # by default how only the best LOD
-                model_collection.children["lod_" + str(lod)].hide_render = True
-                model_collection.children["lod_" + str(lod)].hide_select = True
+                lod_collection.hide_render = True
+                lod_collection.hide_viewport = True
+            model_collection.children.link(lod_collection)
 
             for i in range(pmd.block_11.meshes_per_lod):
                 # meshbpy.data.collections.new("My Sub Collection")
                 # model_collection.children.link()
                 mesh_definition = pmd.block_10[i + (lod * pmd.block_11.meshes_per_lod)]
-                if (
-                    (mesh_definition.uvs_count == 0)
-                    or (mesh_definition.polys_count == 0)
-                    or (mesh_definition.verts_count == 0)
-                ):
+                if mesh_definition.is_empty():
                     print("empty mesh:", i, "in LOD", lod)
                     continue
 
                 mesh = bpy.data.meshes.new("meshdata_" + str(lod) + "_" + str(i))
-
-                transform = pmd.block_9[mesh_definition.transform_index]
 
                 # load vetices
                 vertices = pmd.block_3[
@@ -116,6 +114,7 @@ class ImportPMD(Operator, ImportHelper):
 
                 # for each poly in mesh
                 faces_extracted = []
+                poly_materials = []
                 for poly_index in range(
                     mesh_definition.polys_start_index,
                     mesh_definition.polys_start_index + mesh_definition.polys_count,
@@ -126,60 +125,44 @@ class ImportPMD(Operator, ImportHelper):
                         curr_poly.face_index : curr_poly.face_index
                         + curr_poly.vertices_count
                     ]
-
-                    print(
-                        "try",
-                        len(faces_extracted),
-                        len(uvs),
-                        "poly",
-                        poly_index,
-                        "mesh",
-                        i,
-                        "lod",
-                        lod,
-                    )
+                    uv_table.append([uvs[k] for k in faces_extracted])
                     tab = [uvs[k].vertex_id for k in faces_extracted]
                     faces.append(tab)
+                    poly_materials.append(curr_poly.material_index)
 
                 # create mesh
                 mesh.from_pydata(verts, [], faces)
                 mesh.update()
+                uv_layer = mesh.uv_layers.new()
+                mesh.uv_layers.active = uv_layer
 
-                # add all materials
-                # TODO don't add unused ones
+                # add all materials to mesh
                 for material in blender_materials:
                     mesh.materials.append(material)
 
-                # TODO assign proper material
-                for id, poly in enumerate(mesh.polygons):
-                    poly.material_index = 0
+                for poly_id, poly in enumerate(mesh.polygons):
+                    material_id = poly_materials[poly_id]
+                    poly.material_index = material_id
+
+                    uvs_local = uv_table[poly_id]
+                    for vertex_index, uv in zip(list(poly.loop_indices), uvs_local):
+                        # uv = uv_table[uv_index]
+                        uv_layer.data[vertex_index].uv = (uv.u, -uv.v)
 
                 # add UV data
-                uv_layer = mesh.uv_layers.new()
-                mesh.uv_layers.active = uv_layer
-                for uv in uvs:
-                    uv_layer.data[uv.vertex_id].uv = (uv.u, -uv.v)
+                # TODO broken as heck
+                # uv_layer = mesh.uv_layers.new()
+                # mesh.uv_layers.active = uv_layer
+                # for uv in uvs:
+                #     uv_layer.data[uv.vertex_id].uv = (uv.u, -uv.v)
                 # TODO asaa
 
                 # add a new object using the mesh
                 mesh_obj = bpy.data.objects.new("mesh_" + str(lod) + "_" + str(i), mesh)
 
-                object_transform = mesh_obj.matrix_local.to_4x4()
-
-                object_transform.translation = (
-                    transform.matrix[0][0] * scale,
-                    transform.matrix[0][2] * scale,
-                    transform.matrix[0][1] * scale,
+                mesh_obj.matrix_local = ImportPMD.prepare_transform(
+                    mesh_obj, pmd.block_9[mesh_definition.transform_index], scale
                 )
-                # rotation
-                object_transform[1][1] = transform.matrix[2][2]
-                object_transform[2][2] = transform.matrix[3][1]
-
-                object_transform[1][2] = transform.matrix[2][1]
-                object_transform[2][1] = -transform.matrix[3][2]
-                object_transform[1][0] = transform.matrix[3][0]
-                object_transform[2][0] = transform.matrix[2][0]
-                mesh_obj.matrix_local = object_transform
 
                 lod_collection.objects.link(mesh_obj)
 
@@ -205,7 +188,7 @@ class ImportPMD(Operator, ImportHelper):
     def create_materials(file_path: str, texture_names: list[str]) -> list[str]:
         materials: list["bpy.types.Material"] = []
         for m in texture_names:
-            # TODO check if .tga exists, then .png, then .pc (optional if you have time and importer)
+            # TODO check if .tga exists, then .png, .pc
             img_ext = "png"
             img_path = (
                 str(Path(file_path).parents[0])
@@ -221,29 +204,44 @@ class ImportPMD(Operator, ImportHelper):
             # TODO check if texture exists, if not replace levelX with tracksetX
             # TODO add trackset, skin option to importer (number?)
 
-            # tex = bpy.ops.texture.new()
-            # blender_textures.append(tex)
-
             # create material
-            # TODO easier name
             material = bpy.data.materials.new(name=img_path)
             material.use_nodes = True
             # TODO does this make sense???
             node_tree = material.node_tree
             bsdf = node_tree.nodes.get("Principled BSDF")
+            bsdf.inputs[0].default_value = (1, 1, 1, 1)
 
-            texture_node = node_tree.nodes.new("ShaderNodeTexImage")
-            texture_node.select = True
-            node_tree.nodes.active = texture_node
-
-            img = None
             if exists(img_path):
                 print("loading", img_path)
+                texture_node = node_tree.nodes.new("ShaderNodeTexImage")
+                texture_node.select = True
+                node_tree.nodes.active = texture_node
+
                 img = bpy.data.images.load(img_path)
                 texture_node.image = img
+                node_tree.links.new(texture_node.outputs[0], bsdf.inputs[0])
             else:
                 print("couldn't load", img_path)
 
-            node_tree.links.new(texture_node.outputs[0], bsdf.inputs[0])
             materials.append(material)
         return materials
+
+    @staticmethod
+    def prepare_transform(obj, transform: Transform, scale: float):
+        object_transform = obj.matrix_local.to_4x4()
+
+        object_transform.translation = (
+            transform.matrix[0][0] * scale,
+            transform.matrix[0][2] * scale,
+            transform.matrix[0][1] * scale,
+        )
+        # rotation
+        object_transform[1][1] = transform.matrix[2][2]
+        object_transform[2][2] = transform.matrix[3][1]
+
+        object_transform[1][2] = transform.matrix[2][1]
+        object_transform[2][1] = -transform.matrix[3][2]
+        object_transform[1][0] = transform.matrix[3][0]
+        object_transform[2][0] = transform.matrix[2][0]
+        return object_transform

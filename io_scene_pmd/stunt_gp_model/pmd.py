@@ -190,10 +190,10 @@ class PMD:
             pmd_file.seek(offset + address_offset)
             texture_name = b""
             while True:
-                c = pmd_file.read(1)
-                if c == b"\0":
+                char = pmd_file.read(1)
+                if char == b"\0":
                     break
-                texture_name += c
+                texture_name += char
             textures_list[i] = texture_name.decode("ascii")
             pmd_file.seek(tmp_cursor)
 
