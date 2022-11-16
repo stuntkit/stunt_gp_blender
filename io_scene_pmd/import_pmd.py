@@ -207,6 +207,7 @@ class ImportPMD(Operator, ImportHelper):
             # create material
             material = bpy.data.materials.new(name=img_path)
             material.use_nodes = True
+            material.blend_method = "CLIP"
             # TODO does this make sense???
             node_tree = material.node_tree
             bsdf = node_tree.nodes.get("Principled BSDF")
@@ -221,6 +222,7 @@ class ImportPMD(Operator, ImportHelper):
                 img = bpy.data.images.load(img_path)
                 texture_node.image = img
                 node_tree.links.new(texture_node.outputs[0], bsdf.inputs[0])
+                node_tree.links.new(texture_node.outputs[1], bsdf.inputs[21])
             else:
                 print("couldn't load", img_path)
 
