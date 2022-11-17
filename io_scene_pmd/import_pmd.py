@@ -217,6 +217,7 @@ class ImportPMD(Operator, ImportHelper):
                 print("loading", img_path)
                 texture_node = node_tree.nodes.new("ShaderNodeTexImage")
                 texture_node.select = True
+                # TODO set alpha to premultiplied
                 node_tree.nodes.active = texture_node
 
                 img = bpy.data.images.load(img_path)
