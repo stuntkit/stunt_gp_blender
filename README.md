@@ -4,7 +4,7 @@ Stunt GP BLender addon
 
 This repository contains an addon for Blender 3.x that can import Stunt GP models.
 
-Old version of a script created by mArtin for Blender 2.79 is available here: https://forum.rvgl.org/viewtopic.php?t=391
+Old version of a script created by Martin for Blender 2.79 is available here: https://forum.rvgl.org/viewtopic.php?t=391
 
 
 # Installation
