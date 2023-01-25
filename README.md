@@ -1,4 +1,4 @@
-Stunt GP BLender addon
+Stunt GP Blender addon
 ===
 # This addon is still unfinished
 
