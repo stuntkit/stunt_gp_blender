@@ -1,13 +1,13 @@
 # type: ignore
 """This module manages Blender import for Stunt GP 3D files"""
 
-import bpy
 from os.path import exists
+from pathlib import Path
+
+import bpy
 from bpy_extras.io_utils import ImportHelper  # , orientation_helper
 from bpy.props import StringProperty, FloatProperty, BoolProperty
 from bpy.types import Operator
-
-from pathlib import Path
 
 from .stunt_gp_model import PMD, Transform
 

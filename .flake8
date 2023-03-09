@@ -1,5 +1,5 @@
 [flake8]
-exclude = .git,venv,__pycache__,build,dist,importPMD.py,meshdata
+exclude = .git,venv,__pycache__,build,dist,meshdata
 max-complexity = 6
 # max-line-length = 120
 
