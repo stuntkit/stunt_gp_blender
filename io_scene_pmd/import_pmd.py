@@ -177,7 +177,7 @@ class ImportPMD(Operator, ImportHelper):
                 curveData.resolution_u = 0
 
                 polyline = curveData.splines.new("NURBS")
-                polyline.points.add(len(curve_data))
+                polyline.points.add(max(len(curve_data) - 1, 0))
                 for i, coord in enumerate(curve_data):
                     x, y, z = coord
                     polyline.points[i].co = (x, y, z, 1)
