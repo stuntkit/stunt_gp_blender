@@ -10,6 +10,7 @@ from .transform import Transform
 from .mesh import Mesh
 from .offsetstable import OffsetsTable
 from .metadata import Metadata
+from .aicurve import AICurve
 
 # 1.6 support is broken
 # 1.8 support lacks textures
@@ -54,8 +55,13 @@ class PMD:
         # self.lods_processed = []
         self.size_12: int = 0  # ??? Number of verts in most, ??? in track
 
+        # track data
+        self.block_21: List[Vector] = []
+        self.block_22: List[AICurve] = []
+
     @classmethod
     def from_file(cls, filename: str) -> "PMD":
+        """from_file fills PMD definition from .pmd file"""
         with open(filename, "rb") as pmd_file:  # skipcq: PTC-W6004
             pmd: PMD = PMD()
 
@@ -131,7 +137,9 @@ class PMD:
             else:
                 pmd.block_10 = Mesh.parse_meshes_1_83(pmd_file, offsets_table, 10)
 
-            # if pmd.model_type == ModelType.TRACK:
+            if pmd.model_type == ModelType.TRACK:
+                pmd.block_21 = Vector.parse_vector4(pmd_file, offsets_table, 21)
+                pmd.block_22 = AICurve.parse_aicurve(pmd_file, offsets_table, 22)
 
             return pmd
 

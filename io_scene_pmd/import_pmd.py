@@ -9,7 +9,7 @@ from bpy_extras.io_utils import ImportHelper  # , orientation_helper
 from bpy.props import StringProperty, FloatProperty, BoolProperty
 from bpy.types import Operator
 
-from .stunt_gp_model import PMD, Transform
+from .stunt_gp_model import PMD, Transform, ModelType
 
 
 # @orientation_helper(axis_forward="Z", axis_up="Y")
@@ -165,6 +165,25 @@ class ImportPMD(Operator, ImportHelper):
                 )
 
                 lod_collection.objects.link(mesh_obj)
+
+        if pmd.model_type == ModelType.TRACK:
+            for i, curve in enumerate(pmd.block_22):
+                curve_data = pmd.block_21[
+                    curve.vertice_index : curve.vertice_index + curve.length
+                ]
+                curve_data = [v.get_coords_blender(scale) for v in curve_data]
+                curveData = bpy.data.curves.new("aiCurve_" + str(i), type="CURVE")
+                curveData.dimensions = "3D"
+                curveData.resolution_u = 0
+
+                polyline = curveData.splines.new("NURBS")
+                polyline.points.add(len(curve_data))
+                for i, coord in enumerate(curve_data):
+                    x, y, z = coord
+                    polyline.points[i].co = (x, y, z, 1)
+
+                curve_obj = bpy.data.objects.new("aiCurve_" + str(i), curveData)
+                lod_collection.objects.link(curve_obj)
 
         # meta_collection = bpy.data.collections.new("meta")
         # model_collection.children.link(meta_collection)
