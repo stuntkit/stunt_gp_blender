@@ -208,7 +208,8 @@ class ImportPMD(Operator, ImportHelper):
         materials: list["bpy.types.Material"] = []
         for m in texture_names:
             # TODO check if .tga exists, then .png, .pc
-            img_ext = "png"
+            # img_ext = "png"
+            img_ext = "tga"
             img_path = (
                 str(Path(file_path).parents[0])
                 + "/graphics24/"
@@ -216,6 +217,15 @@ class ImportPMD(Operator, ImportHelper):
                 + "."
                 + img_ext
             )
+            if not exists(img_path):
+                img_ext = "png"
+                img_path = (
+                    str(Path(file_path).parents[0])
+                    + "/graphics24/"
+                    + m.replace("\\\\", "/").replace("\\", "/").lower()
+                    + "."
+                    + img_ext
+                )
             if "/trk_" in img_path:
                 first = img_path[: img_path.find("/trk_") - 6]  # levelX
                 second = img_path[img_path.find("/trk_") + 1 :]

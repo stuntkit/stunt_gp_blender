@@ -5,7 +5,7 @@
 //   Authors: Halamix2
 //   Version: 0.1
 //   Purpose: Read models from Stunt GP PMD 1.83 format
-//  Category: Games
+//  Category: Game
 // File Mask: *.pmd
 //  ID Bytes: 50 4D 44 // PMD
 //   History: 
@@ -62,6 +62,29 @@ typedef struct {
     ubyte material_id;
     ubyte unk;
     ubyte unk2;
+    //unk 148 139
+    /*if (this.unk != 148
+        && this.unk != 139
+        && this.unk != 254
+        && this.unk != 255
+        && this.unk != 127
+        && this.unk != 143
+        && this.unk != 253
+        && this.unk != 175
+        ) {
+        Printf("unk: %d 0x%x\n", unk, unk);
+    }*/
+    if (this.unk2 != 32
+        && this.unk2 != 160
+&& this.unk2 != 80
+&& this.unk2 != 88
+&& this.unk2 != 72
+&& this.unk2 != 200
+&& this.unk2 != 208
+&& this.unk2 != 216
+        ) {
+        Printf("unk2: %d 0x%x\n", unk2, unk2);
+    }
     ushort vert_index;
     ushort face_index;
 } Polygon;
@@ -100,13 +123,15 @@ typedef struct {
     short trash <bgcolor=0x66ff00>;
     short trosh;
     short transform_index;
-   short huh[9] <bgcolor=0x00ff00>;
-    short uvc;
-    short vc <bgcolor=0x0000ff>;
-    int pc;
-    int uvsi;
-    int vsi <bgcolor=0x0000ff>;
-    int psi;
+    short huh[8] <bgcolor=0x00ff00>;
+    short unk;
+    short poly_count;
+    short uv_count;
+    short vert_count;
+    short que;
+    int uv_index;
+    int vert_index;
+    int poly_index;
 } Mesh_1_60;
 
 typedef struct {
@@ -217,7 +242,7 @@ switch(header.magic) {
 }
 
 FSeek(offsets[1] + BLOCK_OFFSET);
-Polygon one[sizes[1]/sizeof(Polygon)];
+Polygon one[sizes[1]/8]<optimize=false>;
 
 FSeek(offsets[2] + BLOCK_OFFSET);
 UV two[sizes[2]/sizeof(UV)] <optimize=true>;
@@ -226,7 +251,18 @@ FSeek(offsets[3] + BLOCK_OFFSET);
 Vector4 three[sizes[3]/sizeof(Vector4)];
 
 FSeek(offsets[4] + BLOCK_OFFSET);
-ushort four[sizes[4]/sizeof(ushort)];
+switch(header.magic) {
+    case "PMD V1.6":
+    case "PMD V1.61":
+    case "PMD V1.62":
+    case "PMD V1.7":
+        uint four[sizes[4]/sizeof(uint)];
+        break;
+    case "PMD V1.82":
+    case "PMD V1.83":
+        ushort four[sizes[4]/sizeof(ushort)];
+        break;
+}
 
 // offets to textures names
 FSeek(offsets[6] + BLOCK_OFFSET);

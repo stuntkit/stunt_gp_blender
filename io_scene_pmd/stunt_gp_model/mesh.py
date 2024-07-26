@@ -77,7 +77,7 @@ class Mesh:  # 1_83:
         ti = FileHelper.read_ushort(pmd_file)
 
         pmd_file.seek(offsets_table[table_index].offset + (0x2C * mesh_index) + 0x18)
-        uvc, vc, pc, uvi, vi, pi = struct.unpack("<2H4L", pmd_file.read(0x14))
+        pc, uvc, vc, _, uvi, vi, pi = struct.unpack("<4H3L", pmd_file.read(0x14))
 
         mesh = Mesh(
             transform_index=ti,

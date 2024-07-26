@@ -56,8 +56,24 @@ class PMD:
         self.size_12: int = 0  # ??? Number of verts in most, ??? in track
 
         # track data
+        # self.block_15
+        # self.block_16
+        # self.block_17
+        # self.size_18
+        # self.size_19
+        # self.block_20
         self.block_21: List[Vector] = []
         self.block_22: List[AICurve] = []
+        # self.block_23
+        # self.block_24
+        # self.block_25
+        # self.block_26
+        # self.block_27
+        # self.block_28
+        # self.block_29
+        # self.block_30
+        # self.block_31
+        # self.block_32 #1.7 and later
 
     @classmethod
     def from_file(cls, filename: str) -> "PMD":
@@ -81,7 +97,10 @@ class PMD:
                 pmd.block_0 = Vector.parse_vector4(pmd_file, offsets_table, 0)
 
             # block 1
-            pmd.block_1 = Polygon.parse_poly(pmd_file, offsets_table, 1)
+            if pmd.version in ["1.6", "1.61", "1.62"]:
+                pmd.block_1 = Polygon.parse_poly_old(pmd_file, offsets_table, 1)
+            else:
+                pmd.block_1 = Polygon.parse_poly(pmd_file, offsets_table, 1)
 
             # block 2
             pmd.block_2 = UV.parse_uv(pmd_file, offsets_table, 2)
@@ -94,7 +113,11 @@ class PMD:
 
             # block 4
             # TODO together with 8, load_indices()
-            pmd.block_4 = PMD.__load_faces(pmd_file, offsets_table, 4)
+            pmd.block_4 = []
+            if pmd.version in ["1.6", "1.61", "1.62", "1.7"]:
+                pmd.block_4 = PMD.__load_faces4(pmd_file, offsets_table, 4)
+            else:
+                pmd.block_4 = PMD.__load_faces2(pmd_file, offsets_table, 4)
 
             # blocks 5 & 6
             pmd.textures = PMD.__load_textures(
@@ -163,7 +186,7 @@ class PMD:
         return (magic, version, model_type, block_count)
 
     @staticmethod
-    def __load_faces(
+    def __load_faces2(
         pmd_file: BinaryIO, offsets_table: OffsetsTable, table_index: int
     ) -> list[int]:
         current_cursor = pmd_file.tell()
@@ -172,6 +195,22 @@ class PMD:
         faces_list = [0 for i in range(faces_count)]
         for i in range(faces_count):
             face = FileHelper.read_ushort(pmd_file)
+            faces_list[i] = face
+
+        pmd_file.seek(current_cursor)
+
+        return faces_list
+
+    @staticmethod
+    def __load_faces4(
+        pmd_file: BinaryIO, offsets_table: OffsetsTable, table_index: int
+    ) -> list[int]:
+        current_cursor = pmd_file.tell()
+        pmd_file.seek(offsets_table[table_index].offset)
+        faces_count = int(offsets_table[table_index].size / 4)
+        faces_list = [0 for i in range(faces_count)]
+        for i in range(faces_count):
+            face = FileHelper.read_uint(pmd_file)
             faces_list[i] = face
 
         pmd_file.seek(current_cursor)

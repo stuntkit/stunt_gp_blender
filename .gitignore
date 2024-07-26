@@ -6,3 +6,5 @@ meshdata
 __pycache__
 
 .dccache
+
+/test.py
