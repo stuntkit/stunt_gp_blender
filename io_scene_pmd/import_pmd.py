@@ -18,7 +18,7 @@ class ImportPMD(Operator, ImportHelper):
 
     bl_idname = "import_scene.pmd"
     bl_label = "Import Stunt GP model"
-    bl_options = {"UNDO", "PRESET"}
+    bl_options = {"REGISTER", "UNDO", "PRESET"}
 
     # ImportHelper mixin class uses this
     filename_ext = ".pmd"
@@ -52,11 +52,6 @@ class ImportPMD(Operator, ImportHelper):
         # -4 *should* work, -6 for tracks starts clipping on default settings
         default=2**-6,
     )
-
-    # TODO add track/car texture selector?
-    def __init__(self):
-        # dumb init to trick linters while keeping Blender compatibility
-        self.filepath: str
 
     # skipcq: PYL-W0613
     def execute(self, context):

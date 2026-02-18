@@ -12,7 +12,7 @@ bl_info = {
     "author": 'Piotr "Halamix2" Halama',
     "version": (0, 0, 3),
     # might work with 2.80, I haven't checked
-    "blender": (4, 0, 0),
+    "blender": (5, 0, 0),
     "location": "File > Import",  # 'Import-Export',
     "description": "Import as Stunt GP 3D files",
     "warning": "Early prototype, can only import",
